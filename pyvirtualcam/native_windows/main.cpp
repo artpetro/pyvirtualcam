@@ -5,12 +5,12 @@
 
 namespace py = pybind11;
 
-void start(int width, int height, double fps, int delay) {
-    if (!virtual_output_start(width, height, fps, delay))
+void start(int width, int height, double fps, int delay, int channel) {
+    if (!virtual_output_start(width, height, fps, delay, channel))
         throw std::runtime_error("error starting virtual camera output");
 }
 
-void send(py::array_t<uint8_t, py::array::c_style> frame) {
+void send(py::array_t<uint8_t, py::array::c_style> frame, int channel) {
     py::buffer_info buf = frame.request();
     if (buf.ndim != 3)
         throw std::runtime_error("ndim must be 3 (h,w,c)");
@@ -22,7 +22,7 @@ void send(py::array_t<uint8_t, py::array::c_style> frame) {
     uint8_t** data = (uint8_t**) malloc(sizeof(uint8_t*) * n_lines);
     for (size_t i=0; i < n_lines; i++)
         data[i] = (uint8_t*)buf.ptr + i*line_size;
-    virtual_video(data);
+    virtual_video(data, channel);
     free(data);
 }
 

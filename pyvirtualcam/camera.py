@@ -14,7 +14,7 @@ else:
 
 class CameraBase(ABC):
     @abstractmethod
-    def __init__(self, width: int, height: int, fps: float, delay: int, print_fps: bool) -> None:
+    def __init__(self, width: int, height: int, fps: float, delay: int, print_fps: bool, channel: int) -> None:
         self._width = width
         self._height = height
         self._fps = fps
@@ -24,6 +24,8 @@ class CameraBase(ABC):
         self._fps_counter = FPSCounter()
         self._fps_warning_printed = False
         self._frames_sent = 0
+        
+        self._channel = channel
     
     def __enter__(self):
         return self
@@ -81,17 +83,17 @@ class CameraBase(ABC):
 
 
 class _WindowsCamera(CameraBase):
-    def __init__(self, width: int, height: int, fps: float, delay=10, print_fps=False) -> None:
-        super().__init__(width, height, fps, delay, print_fps)
-        _native_windows.start(width, height, fps, delay)
+    def __init__(self, width: int, height: int, fps: float, delay=10, print_fps=False, channel=0) -> None:
+        super().__init__(width, height, fps, delay, print_fps, channel)
+        _native_windows.start(width, height, fps, delay, channel)
 
     def close(self) -> None:
         super().close()
-        _native_windows.stop()
+        _native_windows.stop(self._channel)
 
     def send(self, frame: np.ndarray) -> None:
         super().send(frame)
-        _native_windows.send(frame)
+        _native_windows.send(frame, self._channel)
 
 
 if platform.system() == 'Windows':
